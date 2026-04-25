@@ -1,0 +1,16 @@
+{
+  "name": "llamacart-playwright-tutorial",
+  "version": "1.0.0",
+  "description": "End-to-end testing tutorial with Playwright — powered by LlamaCart 🦙",
+  "scripts": {
+    "dev": "cd webapp && npm run dev",
+    "test": "playwright test",
+    "test:ui": "playwright test --ui",
+    "test:headed": "playwright test --headed",
+    "test:chromium": "playwright test --project=chromium",
+    "test:report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.44.0"
+  }
+}

@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LlamaCart 🦙</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --brand: #7C3AED;
+      --brand-light: #EDE9FE;
+      --brand-dark: #5B21B6;
+      --accent: #F59E0B;
+      --success: #10B981;
+      --danger: #EF4444;
+      --text: #1F2937;
+      --text-muted: #6B7280;
+      --bg: #F9FAFB;
+      --card: #FFFFFF;
+      --border: #E5E7EB;
+      --radius: 12px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+    }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* NAV */
+    nav {
+      background: white;
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 100;
+    }
+    .nav-inner {
+      max-width: 1100px; margin: 0 auto;
+      padding: 0 1.5rem;
+      display: flex; align-items: center; gap: 1rem;
+      height: 64px;
+    }
+    .nav-logo {
+      font-size: 1.4rem; font-weight: 800;
+      color: var(--brand); text-decoration: none;
+      display: flex; align-items: center; gap: .4rem;
+    }
+    .nav-logo span { font-size: 1.6rem; }
+    .nav-search {
+      flex: 1; max-width: 400px;
+      display: flex; align-items: center;
+      background: var(--bg); border: 1.5px solid var(--border);
+      border-radius: 999px; padding: 0 1rem; gap: .5rem;
+    }
+    .nav-search input {
+      flex: 1; border: none; background: transparent;
+      font-family: inherit; font-size: .95rem; outline: none;
+      padding: .5rem 0; color: var(--text);
+    }
+    .nav-actions { margin-left: auto; display: flex; gap: .75rem; align-items: center; }
+    .btn {
+      font-family: inherit; font-size: .9rem; font-weight: 700;
+      border: none; border-radius: 999px; cursor: pointer;
+      padding: .5rem 1.25rem; transition: all .15s;
+    }
+    .btn-ghost { background: transparent; color: var(--brand); }
+    .btn-ghost:hover { background: var(--brand-light); }
+    .btn-primary { background: var(--brand); color: white; }
+    .btn-primary:hover { background: var(--brand-dark); }
+    .cart-btn {
+      position: relative; background: var(--brand-light);
+      color: var(--brand); border: none; border-radius: 999px;
+      font-size: 1.2rem; width: 42px; height: 42px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+    }
+    .cart-count {
+      position: absolute; top: -4px; right: -4px;
+      background: var(--accent); color: white;
+      font-size: .65rem; font-weight: 800;
+      width: 18px; height: 18px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .cart-count[data-count="0"] { display: none; }
+
+    /* PAGES */
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* HOME HERO */
+    .hero {
+      background: linear-gradient(135deg, var(--brand) 0%, #A855F7 100%);
+      color: white; text-align: center;
+      padding: 4rem 1.5rem 3rem;
+    }
+    .hero h1 { font-size: 2.8rem; font-weight: 800; margin-bottom: .75rem; }
+    .hero p { font-size: 1.1rem; opacity: .9; margin-bottom: 2rem; }
+    .hero .btn-accent {
+      background: var(--accent); color: white;
+      font-size: 1rem; padding: .75rem 2rem;
+      font-family: inherit; font-weight: 800;
+      border: none; border-radius: 999px; cursor: pointer;
+    }
+
+    /* SHOP */
+    .shop-layout {
+      max-width: 1100px; margin: 0 auto;
+      padding: 2rem 1.5rem;
+      display: grid; grid-template-columns: 220px 1fr; gap: 2rem;
+    }
+    .filters { }
+    .filter-title { font-size: .8rem; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; color: var(--text-muted); margin-bottom: .75rem; }
+    .filter-btn {
+      display: block; width: 100%; text-align: left;
+      font-family: inherit; font-size: .95rem; font-weight: 600;
+      background: none; border: none; cursor: pointer;
+      padding: .5rem .75rem; border-radius: 8px;
+      color: var(--text-muted); transition: all .1s;
+    }
+    .filter-btn:hover { background: var(--brand-light); color: var(--brand); }
+    .filter-btn.active { background: var(--brand-light); color: var(--brand); }
+
+    .products-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; }
+    .products-header h2 { font-size: 1.2rem; font-weight: 800; }
+    .product-count { font-size: .85rem; color: var(--text-muted); }
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1.25rem;
+    }
+
+    /* PRODUCT CARD */
+    .product-card {
+      background: var(--card); border-radius: var(--radius);
+      border: 1px solid var(--border); box-shadow: var(--shadow);
+      overflow: hidden; cursor: pointer;
+      transition: transform .15s, box-shadow .15s;
+      display: flex; flex-direction: column;
+    }
+    .product-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
+    .product-card.out-of-stock { opacity: .6; }
+    .product-emoji { font-size: 3.5rem; padding: 1.5rem; text-align: center; background: var(--brand-light); }
+    .product-body { padding: 1rem; flex: 1; display: flex; flex-direction: column; gap: .4rem; }
+    .product-name { font-weight: 800; font-size: 1rem; }
+    .product-desc { font-size: .82rem; color: var(--text-muted); line-height: 1.4; flex: 1; }
+    .product-footer { display: flex; align-items: center; justify-content: space-between; margin-top: .75rem; }
+    .product-price { font-size: 1.1rem; font-weight: 800; color: var(--brand); }
+    .product-rating { font-size: .8rem; color: var(--text-muted); }
+    .out-of-stock-badge {
+      font-size: .7rem; font-weight: 700; background: #FEE2E2;
+      color: var(--danger); padding: 2px 8px; border-radius: 999px;
+    }
+    .add-to-cart-btn {
+      width: 100%; margin-top: .75rem;
+      font-family: inherit; font-weight: 700;
+      background: var(--brand); color: white;
+      border: none; border-radius: 8px; padding: .6rem;
+      cursor: pointer; font-size: .9rem; transition: background .15s;
+    }
+    .add-to-cart-btn:hover { background: var(--brand-dark); }
+    .add-to-cart-btn:disabled { background: var(--border); color: var(--text-muted); cursor: not-allowed; }
+
+    /* PRODUCT DETAIL */
+    .product-detail {
+      max-width: 800px; margin: 2rem auto; padding: 0 1.5rem;
+    }
+    .product-detail-card {
+      background: white; border-radius: var(--radius);
+      border: 1px solid var(--border); padding: 2rem;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;
+    }
+    .product-detail-emoji { font-size: 8rem; text-align: center; background: var(--brand-light); border-radius: var(--radius); padding: 2rem; }
+    .product-detail h1 { font-size: 1.8rem; font-weight: 800; margin-bottom: .5rem; }
+    .product-detail .detail-price { font-size: 2rem; font-weight: 800; color: var(--brand); margin-bottom: 1rem; }
+    .product-detail .detail-desc { font-size: 1rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 1.5rem; }
+    .tags { display: flex; flex-wrap: wrap; gap: .4rem; margin-bottom: 1.5rem; }
+    .tag { font-size: .75rem; font-weight: 700; background: var(--brand-light); color: var(--brand); padding: 3px 10px; border-radius: 999px; }
+    .back-btn { background: none; border: none; color: var(--brand); font-family: inherit; font-size: .95rem; font-weight: 700; cursor: pointer; margin-bottom: 1rem; padding: 0; }
+    .back-btn:hover { text-decoration: underline; }
+
+    /* CART */
+    .cart-page { max-width: 700px; margin: 2rem auto; padding: 0 1.5rem; }
+    .cart-page h1 { font-size: 1.8rem; font-weight: 800; margin-bottom: 1.5rem; }
+    .cart-empty { text-align: center; padding: 4rem; color: var(--text-muted); }
+    .cart-empty .empty-emoji { font-size: 4rem; margin-bottom: 1rem; }
+    .cart-item {
+      background: white; border-radius: var(--radius);
+      border: 1px solid var(--border); padding: 1rem 1.25rem;
+      display: flex; align-items: center; gap: 1rem; margin-bottom: .75rem;
+    }
+    .cart-item-emoji { font-size: 2.5rem; }
+    .cart-item-info { flex: 1; }
+    .cart-item-name { font-weight: 700; }
+    .cart-item-price { color: var(--text-muted); font-size: .9rem; }
+    .qty-control { display: flex; align-items: center; gap: .5rem; }
+    .qty-btn {
+      width: 28px; height: 28px; border-radius: 50%;
+      border: 1.5px solid var(--border); background: white;
+      font-size: 1rem; cursor: pointer; font-family: inherit;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .qty-btn:hover { border-color: var(--brand); color: var(--brand); }
+    .qty-value { font-weight: 700; min-width: 24px; text-align: center; }
+    .remove-btn { color: var(--danger); background: none; border: none; cursor: pointer; font-size: 1.2rem; }
+    .cart-summary {
+      background: white; border-radius: var(--radius);
+      border: 1px solid var(--border); padding: 1.5rem; margin-top: 1rem;
+    }
+    .summary-row { display: flex; justify-content: space-between; margin-bottom: .5rem; font-size: .95rem; }
+    .summary-total { font-size: 1.2rem; font-weight: 800; border-top: 1px solid var(--border); padding-top: .75rem; margin-top: .5rem; }
+    .checkout-btn {
+      width: 100%; margin-top: 1rem; padding: .9rem;
+      font-family: inherit; font-size: 1rem; font-weight: 800;
+      background: var(--brand); color: white; border: none;
+      border-radius: var(--radius); cursor: pointer;
+    }
+    .checkout-btn:hover { background: var(--brand-dark); }
+
+    /* AUTH */
+    .auth-page {
+      min-height: calc(100vh - 64px);
+      display: flex; align-items: center; justify-content: center;
+      padding: 2rem;
+    }
+    .auth-card {
+      background: white; border-radius: var(--radius);
+      border: 1px solid var(--border); padding: 2.5rem;
+      width: 100%; max-width: 420px; box-shadow: var(--shadow);
+    }
+    .auth-card h2 { font-size: 1.6rem; font-weight: 800; margin-bottom: .5rem; }
+    .auth-card p { color: var(--text-muted); margin-bottom: 2rem; font-size: .95rem; }
+    .form-group { margin-bottom: 1rem; }
+    label { display: block; font-size: .85rem; font-weight: 700; margin-bottom: .4rem; }
+    input[type="email"], input[type="password"], input[type="text"] {
+      width: 100%; padding: .65rem 1rem;
+      border: 1.5px solid var(--border); border-radius: 8px;
+      font-family: inherit; font-size: .95rem; outline: none;
+      transition: border-color .15s;
+    }
+    input:focus { border-color: var(--brand); }
+    .form-error { color: var(--danger); font-size: .85rem; margin-top: .25rem; display: none; }
+    .form-error.visible { display: block; }
+    .auth-submit {
+      width: 100%; padding: .8rem; margin-top: .5rem;
+      font-family: inherit; font-size: 1rem; font-weight: 800;
+      background: var(--brand); color: white; border: none;
+      border-radius: 8px; cursor: pointer;
+    }
+    .auth-submit:hover { background: var(--brand-dark); }
+    .auth-switch { text-align: center; margin-top: 1.5rem; font-size: .9rem; color: var(--text-muted); }
+    .auth-switch a { color: var(--brand); font-weight: 700; cursor: pointer; text-decoration: none; }
+    .auth-hint { background: var(--brand-light); border-radius: 8px; padding: .75rem 1rem; margin-bottom: 1.5rem; font-size: .85rem; color: var(--brand); }
+
+    /* TOAST */
+    .toast-container { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 9999; display: flex; flex-direction: column; gap: .5rem; }
+    .toast {
+      background: var(--text); color: white;
+      padding: .75rem 1.25rem; border-radius: 10px;
+      font-size: .9rem; font-weight: 600;
+      animation: slideIn .25s ease; min-width: 220px;
+    }
+    .toast.success { background: var(--success); }
+    .toast.error { background: var(--danger); }
+    @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+    /* ORDER SUCCESS */
+    .order-success { text-align: center; padding: 4rem 2rem; }
+    .order-success .success-emoji { font-size: 5rem; margin-bottom: 1rem; }
+    .order-success h2 { font-size: 2rem; font-weight: 800; margin-bottom: .5rem; }
+    .order-success p { color: var(--text-muted); margin-bottom: 2rem; }
+
+    /* USER MENU */
+    .user-avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: var(--brand); color: white;
+      font-size: .85rem; font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; border: none;
+    }
+
+    @media (max-width: 680px) {
+      .shop-layout { grid-template-columns: 1fr; }
+      .filters { display: flex; gap: .5rem; flex-wrap: wrap; }
+      .filter-btn { width: auto; }
+      .product-detail-card { grid-template-columns: 1fr; }
+      .hero h1 { font-size: 2rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-inner">
+    <a class="nav-logo" href="#" onclick="navigate('home')">
+      <span>🦙</span> LlamaCart
+    </a>
+    <div class="nav-search">
+      <span>🔍</span>
+      <input
+        type="text"
+        id="search-input"
+        placeholder="Search llama goods..."
+        data-testid="search-input"
+        oninput="handleSearch(this.value)"
+      />
+    </div>
+    <div class="nav-actions">
+      <button class="btn btn-ghost" onclick="navigate('shop')" data-testid="nav-shop">Shop</button>
+      <button class="cart-btn" onclick="navigate('cart')" data-testid="cart-button" aria-label="View cart">
+        🛒
+        <span class="cart-count" id="cart-count" data-count="0">0</span>
+      </button>
+      <div id="auth-nav"></div>
+    </div>
+  </div>
+</nav>
+
+<!-- PAGES -->
+<div id="page-home" class="page active">
+  <div class="hero">
+    <h1>Made by llamas,<br>loved by everyone.</h1>
+    <p>Handcrafted goods straight from the Andes. Wool, snacks, gifts — and a whole lot of fluff.</p>
+    <button class="btn-accent" onclick="navigate('shop')" data-testid="hero-shop-btn">Shop the Collection</button>
+  </div>
+  <div class="shop-layout" style="grid-template-columns: 1fr;">
+    <div>
+      <div class="products-header">
+        <h2>Featured Products</h2>
+      </div>
+      <div class="products-grid" id="featured-grid"></div>
+    </div>
+  </div>
+</div>
+
+<div id="page-shop" class="page">
+  <div class="shop-layout">
+    <aside class="filters">
+      <div class="filter-title">Category</div>
+      <div id="filter-buttons"></div>
+    </aside>
+    <div>
+      <div class="products-header">
+        <h2 id="shop-heading">All Products</h2>
+        <span class="product-count" id="product-count"></span>
+      </div>
+      <div class="products-grid" id="products-grid"></div>
+    </div>
+  </div>
+</div>
+
+<div id="page-product" class="page">
+  <div class="product-detail" id="product-detail-content"></div>
+</div>
+
+<div id="page-cart" class="page">
+  <div class="cart-page">
+    <h1>Your Cart 🛒</h1>
+    <div id="cart-content"></div>
+  </div>
+</div>
+
+<div id="page-login" class="page">
+  <div class="auth-page">
+    <div class="auth-card">
+      <h2>Welcome back 🦙</h2>
+      <p>Sign in to your LlamaCart account.</p>
+      <div class="auth-hint" data-testid="login-hint">
+        Demo credentials: <strong>tester@llamacart.dev</strong> / <strong>LlamaRules123</strong>
+      </div>
+      <div class="form-group">
+        <label for="login-email">Email</label>
+        <input type="email" id="login-email" data-testid="login-email" placeholder="you@example.com" />
+      </div>
+      <div class="form-group">
+        <label for="login-password">Password</label>
+        <input type="password" id="login-password" data-testid="login-password" placeholder="••••••••" />
+        <div class="form-error" id="login-error" data-testid="login-error">Invalid email or password.</div>
+      </div>
+      <button class="auth-submit" onclick="handleLogin()" data-testid="login-submit">Sign In</button>
+      <div class="auth-switch">Don't have an account? <a onclick="navigate('register')">Create one</a></div>
+    </div>
+  </div>
+</div>
+
+<div id="page-register" class="page">
+  <div class="auth-page">
+    <div class="auth-card">
+      <h2>Join the herd 🦙</h2>
+      <p>Create your LlamaCart account.</p>
+      <div class="form-group">
+        <label for="reg-name">Full name</label>
+        <input type="text" id="reg-name" data-testid="register-name" placeholder="Alex Llama" />
+      </div>
+      <div class="form-group">
+        <label for="reg-email">Email</label>
+        <input type="email" id="reg-email" data-testid="register-email" placeholder="you@example.com" />
+      </div>
+      <div class="form-group">
+        <label for="reg-password">Password</label>
+        <input type="password" id="reg-password" data-testid="register-password" placeholder="Min. 8 characters" />
+        <div class="form-error" id="reg-error" data-testid="register-error"></div>
+      </div>
+      <button class="auth-submit" onclick="handleRegister()" data-testid="register-submit">Create Account</button>
+      <div class="auth-switch">Already a member? <a onclick="navigate('login')">Sign in</a></div>
+    </div>
+  </div>
+</div>
+
+<div id="page-order-success" class="page">
+  <div class="order-success">
+    <div class="success-emoji">🎉</div>
+    <h2>Order placed!</h2>
+    <p>Your llama goods are on their way. Thanks for shopping with us!</p>
+    <button class="btn btn-primary" onclick="navigate('shop')" data-testid="continue-shopping">Continue Shopping</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast-container" id="toasts"></div>
+
+<script type="module">
+  import { products, categories, DEMO_USER } from './src/data/products.js';
+
+  // ── STATE ─────────────────────────────────────────────────────────────────
+  let cart = JSON.parse(localStorage.getItem('llama-cart') || '[]');
+  let user = JSON.parse(localStorage.getItem('llama-user') || 'null');
+  let activeCategory = 'all';
+  let searchQuery = '';
+
+  // ── NAVIGATION ────────────────────────────────────────────────────────────
+  window.navigate = function(page, data) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById('page-' + page)?.classList.add('active');
+    window.scrollTo(0, 0);
+    if (page === 'shop') renderShop();
+    if (page === 'home') renderFeatured();
+    if (page === 'cart') renderCart();
+    if (page === 'product' && data) renderProductDetail(data);
+  };
+
+  // ── RENDER AUTH NAV ───────────────────────────────────────────────────────
+  function renderAuthNav() {
+    const el = document.getElementById('auth-nav');
+    if (user) {
+      el.innerHTML = `<button class="user-avatar" data-testid="user-avatar" onclick="handleLogout()" title="Sign out">${user.name.slice(0,2).toUpperCase()}</button>`;
+    } else {
+      el.innerHTML = `<button class="btn btn-primary" onclick="navigate('login')" data-testid="nav-login">Sign In</button>`;
+    }
+  }
+
+  // ── PRODUCT CARD ──────────────────────────────────────────────────────────
+  function productCardHTML(p) {
+    const oos = !p.inStock;
+    return `
+      <div class="product-card ${oos ? 'out-of-stock' : ''}" data-testid="product-card" data-product-id="${p.id}" onclick="navigate('product', ${p.id})">
+        <div class="product-emoji">${p.emoji}</div>
+        <div class="product-body">
+          <div class="product-name" data-testid="product-name">${p.name}</div>
+          <div class="product-desc">${p.description}</div>
+          <div class="product-footer">
+            <span class="product-price" data-testid="product-price">$${p.price.toFixed(2)}</span>
+            ${oos ? '<span class="out-of-stock-badge">Out of stock</span>' : `<span class="product-rating">⭐ ${p.rating} (${p.reviews})</span>`}
+          </div>
+          <button class="add-to-cart-btn" data-testid="add-to-cart" onclick="event.stopPropagation(); addToCart(${p.id})" ${oos ? 'disabled' : ''}>
+            ${oos ? 'Out of Stock' : 'Add to Cart'}
+          </button>
+        </div>
+      </div>`;
+  }
+
+  // ── FEATURED ──────────────────────────────────────────────────────────────
+  function renderFeatured() {
+    const featured = products.filter(p => p.inStock).slice(0, 4);
+    document.getElementById('featured-grid').innerHTML = featured.map(productCardHTML).join('');
+  }
+
+  // ── SHOP ──────────────────────────────────────────────────────────────────
+  function renderShop() {
+    const filterEl = document.getElementById('filter-buttons');
+    filterEl.innerHTML = categories.map(cat => `
+      <button class="filter-btn ${cat === activeCategory ? 'active' : ''}" data-testid="filter-${cat}" onclick="setCategory('${cat}')">
+        ${cat.charAt(0).toUpperCase() + cat.slice(1)}
+      </button>`).join('');
+
+    let filtered = products;
+    if (activeCategory !== 'all') filtered = filtered.filter(p => p.category === activeCategory);
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      filtered = filtered.filter(p =>
+        p.name.toLowerCase().includes(q) ||
+        p.description.toLowerCase().includes(q) ||
+        p.tags.some(t => t.includes(q))
+      );
+    }
+
+    document.getElementById('shop-heading').textContent =
+      activeCategory === 'all' ? 'All Products' : activeCategory.charAt(0).toUpperCase() + activeCategory.slice(1);
+    document.getElementById('product-count').textContent = `${filtered.length} item${filtered.length !== 1 ? 's' : ''}`;
+    document.getElementById('products-grid').innerHTML =
+      filtered.length ? filtered.map(productCardHTML).join('') :
+      '<p style="color:var(--text-muted);padding:2rem 0;">No products found.</p>';
+  }
+
+  window.setCategory = function(cat) {
+    activeCategory = cat;
+    renderShop();
+  };
+
+  window.handleSearch = function(val) {
+    searchQuery = val;
+    if (document.getElementById('page-shop').classList.contains('active')) renderShop();
+    else navigate('shop');
+  };
+
+  // ── PRODUCT DETAIL ────────────────────────────────────────────────────────
+  function renderProductDetail(id) {
+    const p = products.find(p => p.id === id);
+    if (!p) return;
+    document.getElementById('product-detail-content').innerHTML = `
+      <button class="back-btn" onclick="history.back(); navigate('shop')" data-testid="back-to-shop">← Back to shop</button>
+      <div class="product-detail-card">
+        <div class="product-detail-emoji">${p.emoji}</div>
+        <div>
+          <h1 data-testid="detail-product-name">${p.name}</h1>
+          <div class="detail-price" data-testid="detail-product-price">$${p.price.toFixed(2)}</div>
+          <p class="detail-desc">${p.description}</p>
+          <div class="tags">${p.tags.map(t => `<span class="tag">#${t}</span>`).join('')}</div>
+          <p style="font-size:.9rem;color:var(--text-muted);margin-bottom:1rem;">⭐ ${p.rating} · ${p.reviews} reviews</p>
+          <button class="add-to-cart-btn" data-testid="detail-add-to-cart" onclick="addToCart(${p.id})" ${!p.inStock ? 'disabled' : ''}>
+            ${p.inStock ? 'Add to Cart' : 'Out of Stock'}
+          </button>
+        </div>
+      </div>`;
+  }
+
+  // ── CART ──────────────────────────────────────────────────────────────────
+  window.addToCart = function(id) {
+    const p = products.find(p => p.id === id);
+    if (!p || !p.inStock) return;
+    const existing = cart.find(i => i.id === id);
+    if (existing) existing.qty++;
+    else cart.push({ id, qty: 1 });
+    saveCart();
+    showToast(`${p.emoji} ${p.name} added to cart!`, 'success');
+  };
+
+  window.updateQty = function(id, delta) {
+    const item = cart.find(i => i.id === id);
+    if (!item) return;
+    item.qty += delta;
+    if (item.qty <= 0) cart = cart.filter(i => i.id !== id);
+    saveCart();
+    renderCart();
+  };
+
+  window.removeFromCart = function(id) {
+    cart = cart.filter(i => i.id !== id);
+    saveCart();
+    renderCart();
+  };
+
+  function saveCart() {
+    localStorage.setItem('llama-cart', JSON.stringify(cart));
+    const total = cart.reduce((s, i) => s + i.qty, 0);
+    const el = document.getElementById('cart-count');
+    el.textContent = total;
+    el.dataset.count = total;
+  }
+
+  function renderCart() {
+    const el = document.getElementById('cart-content');
+    if (!cart.length) {
+      el.innerHTML = `<div class="cart-empty"><div class="empty-emoji">🦙</div><p>Your cart is empty!</p><button class="btn btn-primary" onclick="navigate('shop')" style="margin-top:1rem" data-testid="empty-cart-shop-btn">Start Shopping</button></div>`;
+      return;
+    }
+    const subtotal = cart.reduce((s, i) => {
+      const p = products.find(p => p.id === i.id);
+      return s + (p ? p.price * i.qty : 0);
+    }, 0);
+    const shipping = subtotal > 50 ? 0 : 5.99;
+    const total = subtotal + shipping;
+
+    el.innerHTML = cart.map(item => {
+      const p = products.find(p => p.id === item.id);
+      return `
+        <div class="cart-item" data-testid="cart-item" data-product-id="${p.id}">
+          <span class="cart-item-emoji">${p.emoji}</span>
+          <div class="cart-item-info">
+            <div class="cart-item-name" data-testid="cart-item-name">${p.name}</div>
+            <div class="cart-item-price" data-testid="cart-item-price">$${(p.price * item.qty).toFixed(2)}</div>
+          </div>
+          <div class="qty-control">
+            <button class="qty-btn" onclick="updateQty(${p.id}, -1)" data-testid="qty-decrease" aria-label="Decrease quantity">−</button>
+            <span class="qty-value" data-testid="qty-value">${item.qty}</span>
+            <button class="qty-btn" onclick="updateQty(${p.id}, 1)" data-testid="qty-increase" aria-label="Increase quantity">+</button>
+          </div>
+          <button class="remove-btn" onclick="removeFromCart(${p.id})" data-testid="remove-from-cart" aria-label="Remove item">✕</button>
+        </div>`;
+    }).join('') + `
+      <div class="cart-summary">
+        <div class="summary-row"><span>Subtotal</span><span data-testid="cart-subtotal">$${subtotal.toFixed(2)}</span></div>
+        <div class="summary-row"><span>Shipping</span><span data-testid="cart-shipping">${shipping === 0 ? 'Free 🎉' : '$' + shipping.toFixed(2)}</span></div>
+        <div class="summary-row summary-total"><span>Total</span><span data-testid="cart-total">$${total.toFixed(2)}</span></div>
+        <button class="checkout-btn" onclick="handleCheckout()" data-testid="checkout-btn">Checkout →</button>
+      </div>`;
+  }
+
+  window.handleCheckout = function() {
+    cart = [];
+    saveCart();
+    navigate('order-success');
+  };
+
+  // ── AUTH ──────────────────────────────────────────────────────────────────
+  window.handleLogin = function() {
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+    const errEl = document.getElementById('login-error');
+    if (email === DEMO_USER.email && password === DEMO_USER.password) {
+      user = { email, name: DEMO_USER.name };
+      localStorage.setItem('llama-user', JSON.stringify(user));
+      errEl.classList.remove('visible');
+      renderAuthNav();
+      showToast('Welcome back, ' + user.name + '! 🦙', 'success');
+      navigate('shop');
+    } else {
+      errEl.classList.add('visible');
+    }
+  };
+
+  window.handleRegister = function() {
+    const name = document.getElementById('reg-name').value.trim();
+    const email = document.getElementById('reg-email').value.trim();
+    const password = document.getElementById('reg-password').value;
+    const errEl = document.getElementById('reg-error');
+    if (!name || !email || !password) { errEl.textContent = 'All fields are required.'; errEl.classList.add('visible'); return; }
+    if (password.length < 8) { errEl.textContent = 'Password must be at least 8 characters.'; errEl.classList.add('visible'); return; }
+    errEl.classList.remove('visible');
+    user = { email, name };
+    localStorage.setItem('llama-user', JSON.stringify(user));
+    renderAuthNav();
+    showToast('Account created! Welcome, ' + name + ' 🦙', 'success');
+    navigate('shop');
+  };
+
+  window.handleLogout = function() {
+    user = null;
+    localStorage.removeItem('llama-user');
+    renderAuthNav();
+    showToast('Signed out. See you soon! 🦙');
+    navigate('home');
+  };
+
+  // ── TOAST ─────────────────────────────────────────────────────────────────
+  window.showToast = function(msg, type = '') {
+    const container = document.getElementById('toasts');
+    const toast = document.createElement('div');
+    toast.className = 'toast ' + type;
+    toast.dataset.testid = 'toast';
+    toast.textContent = msg;
+    container.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+  };
+
+  // ── INIT ──────────────────────────────────────────────────────────────────
+  renderFeatured();
+  renderAuthNav();
+  saveCart();
+</script>
+</body>
+</html>
