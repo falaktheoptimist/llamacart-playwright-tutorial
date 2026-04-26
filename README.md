@@ -21,6 +21,8 @@
 
 LlamaCart is a small e-commerce store selling llama-made goods: wool scarves, alpaca snacks, friendship bracelets, and more. It's built with plain HTML + Vanilla JS + Vite — no framework needed, easy to run anywhere.
 
+![LlamaCart shop page showing product grid with filters and search](tests/01-basics/assets/shop-page.png)
+
 **Features tested:**
 - Product listing with search and category filters
 - Product detail pages
@@ -78,12 +80,7 @@ npm run test:headed
 npm run test:report
 ```
 
-### Demo credentials
 
-```
-Email:    tester@llamacart.dev
-Password: LlamaRules123
-```
 
 ---
 
