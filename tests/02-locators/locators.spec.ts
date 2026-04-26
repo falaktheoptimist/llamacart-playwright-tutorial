@@ -51,11 +51,13 @@ test.describe('Locators — finding elements the right way', () => {
     await page.goto('/');
     await page.getByTestId('nav-login').click();
 
-    // getByLabel works on <input> elements that have a matching <label>
-    await page.getByLabel('Email').fill('tester@llamacart.dev');
-    await page.getByLabel('Password').fill('LlamaRules123');
+    // Both login and register forms are in the DOM — scope to the login page
+    // so getByLabel doesn't hit both Email inputs at once (strict mode violation)
+    const loginForm = page.locator('#page-login');
+    await loginForm.getByLabel('Email').fill('tester@llamacart.dev');
+    await loginForm.getByLabel('Password').fill('LlamaRules123');
 
-    await expect(page.getByLabel('Email')).toHaveValue('tester@llamacart.dev');
+    await expect(loginForm.getByLabel('Email')).toHaveValue('tester@llamacart.dev');
   });
 
   // ── getByPlaceholder ─────────────────────────────────────────────────────
@@ -67,8 +69,9 @@ test.describe('Locators — finding elements the right way', () => {
 
   // ── getByText ────────────────────────────────────────────────────────────
   test('getByText — find elements by visible text', async ({ page }) => {
-    // Exact text
-    const badge = page.getByText('Out of stock');
+    // exact: true prevents matching the product description and disabled button
+    // that also contain "out of stock" as a substring
+    const badge = page.getByText('Out of stock', { exact: true });
     await expect(badge).toBeVisible();
   });
 
