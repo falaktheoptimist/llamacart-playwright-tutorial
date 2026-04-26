@@ -4,16 +4,21 @@
 
 ---
 
+![LlamaCart demo — adding items to cart and checking out](tests/01-basics/assets/demo.gif)
+
+---
+
 ## What's inside
 
 | Chapter | Topic | What you'll learn |
 |---|---|---|
-| `01-basics` | Your first tests | `goto`, `click`, `fill`, basic assertions |
-| `02-locators` | Finding elements | `getByRole`, `getByLabel`, `getByTestId`, `filter` |
-| `03-fixtures-and-pom` | Page Object Model | Reusable page classes, custom fixtures |
-| `04-api-and-network` | Network mocking | `page.route()`, intercepting API calls |
-| `05-auth-state` | Auth state | `storageState`, log in once across all tests |
-| `06-ci-cd` | GitHub Actions | Running Playwright in CI, uploading reports |
+| [01-basics](tests/01-basics/README.md) | Your first tests | `goto`, `click`, `fill`, basic assertions |
+| [02-locators](tests/02-locators/README.md) | Finding elements | `getByRole`, `getByLabel`, `getByTestId`, `filter` |
+| [03-fixtures-and-pom](tests/03-fixtures-and-pom/README.md) | Page Object Model | Reusable page classes, custom fixtures |
+| [04-api-and-network](tests/04-api-and-network/README.md) | Network & API testing | `page.route()`, request interception, HAR files |
+| [05-auth-state](tests/05-auth-state/README.md) | Auth state | `storageState`, log in once across all tests |
+| [06-visual-testing](tests/06-visual-testing/README.md) | Visual regression | `toHaveScreenshot`, baselines, masking, thresholds |
+| [07-ci-cd](tests/07-ci-cd/README.md) | CI/CD patterns | Tags, sharding, retry-safe assertions, `test.slow` |
 
 ---
 
@@ -80,8 +85,6 @@ npm run test:headed
 npm run test:report
 ```
 
-
-
 ---
 
 ## Project structure
@@ -99,7 +102,9 @@ llamacart-playwright-tutorial/
 │   │   └── pages/              # Page Object Model classes
 │   ├── 04-api-and-network/
 │   ├── 05-auth-state/
-│   └── 06-ci-cd/
+│   ├── 06-visual-testing/
+│   │   └── visual.spec.ts-snapshots/   # Baseline screenshots
+│   └── 07-ci-cd/
 └── .github/workflows/
     └── playwright.yml
 ```
@@ -141,6 +146,36 @@ await page.context().storageState({ path: 'auth.json' });
 
 // Reuse in other tests — already logged in
 const context = await browser.newContext({ storageState: 'auth.json' });
+```
+
+### Visual regression (Chapter 6)
+
+```typescript
+// Full-page baseline
+await expect(page).toHaveScreenshot('homepage.png', {
+  animations: 'disabled',
+  maxDiffPixelRatio: 0.01,
+});
+
+// Element-level — tighter scope, faster feedback
+await expect(page.getByTestId('product-card').first()).toHaveScreenshot('card.png');
+
+// Mask dynamic regions so they never cause false failures
+await expect(page).toHaveScreenshot('cart.png', {
+  mask: [page.getByTestId('cart-total')],
+});
+```
+
+### CI/CD patterns (Chapter 7)
+
+```typescript
+test.skip(isCI, 'Needs a display — run locally only');
+test.fixme(true, 'Tracked in issue #42');
+test.slow(); // 3× the default timeout
+
+// Run subsets with tags
+// npx playwright test --grep @smoke
+// npx playwright test --shard=1/3
 ```
 
 ---
