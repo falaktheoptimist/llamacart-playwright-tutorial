@@ -7,6 +7,11 @@ playwright-report/
 test-results/
 blob-report/
 
+# HAR recordings (Chapter 4) — regenerated on every run with update:true
+tests/04-api-and-network/assets/llamacart.har
+tests/04-api-and-network/assets/*.dat
+tests/04-api-and-network/assets/*.html
+
 # Auth state (Chapter 5)
 auth.json
 .auth/
