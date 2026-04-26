@@ -4,295 +4,15 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>LlamaCart 🦙</title>
+  <!-- Google Fonts: Nunito used throughout the app -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --brand: #7C3AED;
-      --brand-light: #EDE9FE;
-      --brand-dark: #5B21B6;
-      --accent: #F59E0B;
-      --success: #10B981;
-      --danger: #EF4444;
-      --text: #1F2937;
-      --text-muted: #6B7280;
-      --bg: #F9FAFB;
-      --card: #FFFFFF;
-      --border: #E5E7EB;
-      --radius: 12px;
-      --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
-    }
-
-    body {
-      font-family: 'Nunito', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-    }
-
-    /* NAV */
-    nav {
-      background: white;
-      border-bottom: 1px solid var(--border);
-      position: sticky; top: 0; z-index: 100;
-    }
-    .nav-inner {
-      max-width: 1100px; margin: 0 auto;
-      padding: 0 1.5rem;
-      display: flex; align-items: center; gap: 1rem;
-      height: 64px;
-    }
-    .nav-logo {
-      font-size: 1.4rem; font-weight: 800;
-      color: var(--brand); text-decoration: none;
-      display: flex; align-items: center; gap: .4rem;
-    }
-    .nav-logo span { font-size: 1.6rem; }
-    .nav-search {
-      flex: 1; max-width: 400px;
-      display: flex; align-items: center;
-      background: var(--bg); border: 1.5px solid var(--border);
-      border-radius: 999px; padding: 0 1rem; gap: .5rem;
-    }
-    .nav-search input {
-      flex: 1; border: none; background: transparent;
-      font-family: inherit; font-size: .95rem; outline: none;
-      padding: .5rem 0; color: var(--text);
-    }
-    .nav-actions { margin-left: auto; display: flex; gap: .75rem; align-items: center; }
-    .btn {
-      font-family: inherit; font-size: .9rem; font-weight: 700;
-      border: none; border-radius: 999px; cursor: pointer;
-      padding: .5rem 1.25rem; transition: all .15s;
-    }
-    .btn-ghost { background: transparent; color: var(--brand); }
-    .btn-ghost:hover { background: var(--brand-light); }
-    .btn-primary { background: var(--brand); color: white; }
-    .btn-primary:hover { background: var(--brand-dark); }
-    .cart-btn {
-      position: relative; background: var(--brand-light);
-      color: var(--brand); border: none; border-radius: 999px;
-      font-size: 1.2rem; width: 42px; height: 42px;
-      cursor: pointer; display: flex; align-items: center; justify-content: center;
-    }
-    .cart-count {
-      position: absolute; top: -4px; right: -4px;
-      background: var(--accent); color: white;
-      font-size: .65rem; font-weight: 800;
-      width: 18px; height: 18px; border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-    }
-    .cart-count[data-count="0"] { display: none; }
-
-    /* PAGES */
-    .page { display: none; }
-    .page.active { display: block; }
-
-    /* HOME HERO */
-    .hero {
-      background: linear-gradient(135deg, var(--brand) 0%, #A855F7 100%);
-      color: white; text-align: center;
-      padding: 4rem 1.5rem 3rem;
-    }
-    .hero h1 { font-size: 2.8rem; font-weight: 800; margin-bottom: .75rem; }
-    .hero p { font-size: 1.1rem; opacity: .9; margin-bottom: 2rem; }
-    .hero .btn-accent {
-      background: var(--accent); color: white;
-      font-size: 1rem; padding: .75rem 2rem;
-      font-family: inherit; font-weight: 800;
-      border: none; border-radius: 999px; cursor: pointer;
-    }
-
-    /* SHOP */
-    .shop-layout {
-      max-width: 1100px; margin: 0 auto;
-      padding: 2rem 1.5rem;
-      display: grid; grid-template-columns: 220px 1fr; gap: 2rem;
-    }
-    .filters { }
-    .filter-title { font-size: .8rem; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; color: var(--text-muted); margin-bottom: .75rem; }
-    .filter-btn {
-      display: block; width: 100%; text-align: left;
-      font-family: inherit; font-size: .95rem; font-weight: 600;
-      background: none; border: none; cursor: pointer;
-      padding: .5rem .75rem; border-radius: 8px;
-      color: var(--text-muted); transition: all .1s;
-    }
-    .filter-btn:hover { background: var(--brand-light); color: var(--brand); }
-    .filter-btn.active { background: var(--brand-light); color: var(--brand); }
-
-    .products-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; }
-    .products-header h2 { font-size: 1.2rem; font-weight: 800; }
-    .product-count { font-size: .85rem; color: var(--text-muted); }
-    .products-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 1.25rem;
-    }
-
-    /* PRODUCT CARD */
-    .product-card {
-      background: var(--card); border-radius: var(--radius);
-      border: 1px solid var(--border); box-shadow: var(--shadow);
-      overflow: hidden; cursor: pointer;
-      transition: transform .15s, box-shadow .15s;
-      display: flex; flex-direction: column;
-    }
-    .product-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
-    .product-card.out-of-stock { opacity: .6; }
-    .product-emoji { font-size: 3.5rem; padding: 1.5rem; text-align: center; background: var(--brand-light); }
-    .product-body { padding: 1rem; flex: 1; display: flex; flex-direction: column; gap: .4rem; }
-    .product-name { font-weight: 800; font-size: 1rem; }
-    .product-desc { font-size: .82rem; color: var(--text-muted); line-height: 1.4; flex: 1; }
-    .product-footer { display: flex; align-items: center; justify-content: space-between; margin-top: .75rem; }
-    .product-price { font-size: 1.1rem; font-weight: 800; color: var(--brand); }
-    .product-rating { font-size: .8rem; color: var(--text-muted); }
-    .out-of-stock-badge {
-      font-size: .7rem; font-weight: 700; background: #FEE2E2;
-      color: var(--danger); padding: 2px 8px; border-radius: 999px;
-    }
-    .add-to-cart-btn {
-      width: 100%; margin-top: .75rem;
-      font-family: inherit; font-weight: 700;
-      background: var(--brand); color: white;
-      border: none; border-radius: 8px; padding: .6rem;
-      cursor: pointer; font-size: .9rem; transition: background .15s;
-    }
-    .add-to-cart-btn:hover { background: var(--brand-dark); }
-    .add-to-cart-btn:disabled { background: var(--border); color: var(--text-muted); cursor: not-allowed; }
-
-    /* PRODUCT DETAIL */
-    .product-detail {
-      max-width: 800px; margin: 2rem auto; padding: 0 1.5rem;
-    }
-    .product-detail-card {
-      background: white; border-radius: var(--radius);
-      border: 1px solid var(--border); padding: 2rem;
-      display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;
-    }
-    .product-detail-emoji { font-size: 8rem; text-align: center; background: var(--brand-light); border-radius: var(--radius); padding: 2rem; }
-    .product-detail h1 { font-size: 1.8rem; font-weight: 800; margin-bottom: .5rem; }
-    .product-detail .detail-price { font-size: 2rem; font-weight: 800; color: var(--brand); margin-bottom: 1rem; }
-    .product-detail .detail-desc { font-size: 1rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 1.5rem; }
-    .tags { display: flex; flex-wrap: wrap; gap: .4rem; margin-bottom: 1.5rem; }
-    .tag { font-size: .75rem; font-weight: 700; background: var(--brand-light); color: var(--brand); padding: 3px 10px; border-radius: 999px; }
-    .back-btn { background: none; border: none; color: var(--brand); font-family: inherit; font-size: .95rem; font-weight: 700; cursor: pointer; margin-bottom: 1rem; padding: 0; }
-    .back-btn:hover { text-decoration: underline; }
-
-    /* CART */
-    .cart-page { max-width: 700px; margin: 2rem auto; padding: 0 1.5rem; }
-    .cart-page h1 { font-size: 1.8rem; font-weight: 800; margin-bottom: 1.5rem; }
-    .cart-empty { text-align: center; padding: 4rem; color: var(--text-muted); }
-    .cart-empty .empty-emoji { font-size: 4rem; margin-bottom: 1rem; }
-    .cart-item {
-      background: white; border-radius: var(--radius);
-      border: 1px solid var(--border); padding: 1rem 1.25rem;
-      display: flex; align-items: center; gap: 1rem; margin-bottom: .75rem;
-    }
-    .cart-item-emoji { font-size: 2.5rem; }
-    .cart-item-info { flex: 1; }
-    .cart-item-name { font-weight: 700; }
-    .cart-item-price { color: var(--text-muted); font-size: .9rem; }
-    .qty-control { display: flex; align-items: center; gap: .5rem; }
-    .qty-btn {
-      width: 28px; height: 28px; border-radius: 50%;
-      border: 1.5px solid var(--border); background: white;
-      font-size: 1rem; cursor: pointer; font-family: inherit;
-      display: flex; align-items: center; justify-content: center;
-    }
-    .qty-btn:hover { border-color: var(--brand); color: var(--brand); }
-    .qty-value { font-weight: 700; min-width: 24px; text-align: center; }
-    .remove-btn { color: var(--danger); background: none; border: none; cursor: pointer; font-size: 1.2rem; }
-    .cart-summary {
-      background: white; border-radius: var(--radius);
-      border: 1px solid var(--border); padding: 1.5rem; margin-top: 1rem;
-    }
-    .summary-row { display: flex; justify-content: space-between; margin-bottom: .5rem; font-size: .95rem; }
-    .summary-total { font-size: 1.2rem; font-weight: 800; border-top: 1px solid var(--border); padding-top: .75rem; margin-top: .5rem; }
-    .checkout-btn {
-      width: 100%; margin-top: 1rem; padding: .9rem;
-      font-family: inherit; font-size: 1rem; font-weight: 800;
-      background: var(--brand); color: white; border: none;
-      border-radius: var(--radius); cursor: pointer;
-    }
-    .checkout-btn:hover { background: var(--brand-dark); }
-
-    /* AUTH */
-    .auth-page {
-      min-height: calc(100vh - 64px);
-      display: flex; align-items: center; justify-content: center;
-      padding: 2rem;
-    }
-    .auth-card {
-      background: white; border-radius: var(--radius);
-      border: 1px solid var(--border); padding: 2.5rem;
-      width: 100%; max-width: 420px; box-shadow: var(--shadow);
-    }
-    .auth-card h2 { font-size: 1.6rem; font-weight: 800; margin-bottom: .5rem; }
-    .auth-card p { color: var(--text-muted); margin-bottom: 2rem; font-size: .95rem; }
-    .form-group { margin-bottom: 1rem; }
-    label { display: block; font-size: .85rem; font-weight: 700; margin-bottom: .4rem; }
-    input[type="email"], input[type="password"], input[type="text"] {
-      width: 100%; padding: .65rem 1rem;
-      border: 1.5px solid var(--border); border-radius: 8px;
-      font-family: inherit; font-size: .95rem; outline: none;
-      transition: border-color .15s;
-    }
-    input:focus { border-color: var(--brand); }
-    .form-error { color: var(--danger); font-size: .85rem; margin-top: .25rem; display: none; }
-    .form-error.visible { display: block; }
-    .auth-submit {
-      width: 100%; padding: .8rem; margin-top: .5rem;
-      font-family: inherit; font-size: 1rem; font-weight: 800;
-      background: var(--brand); color: white; border: none;
-      border-radius: 8px; cursor: pointer;
-    }
-    .auth-submit:hover { background: var(--brand-dark); }
-    .auth-switch { text-align: center; margin-top: 1.5rem; font-size: .9rem; color: var(--text-muted); }
-    .auth-switch a { color: var(--brand); font-weight: 700; cursor: pointer; text-decoration: none; }
-    .auth-hint { background: var(--brand-light); border-radius: 8px; padding: .75rem 1rem; margin-bottom: 1.5rem; font-size: .85rem; color: var(--brand); }
-
-    /* TOAST */
-    .toast-container { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 9999; display: flex; flex-direction: column; gap: .5rem; }
-    .toast {
-      background: var(--text); color: white;
-      padding: .75rem 1.25rem; border-radius: 10px;
-      font-size: .9rem; font-weight: 600;
-      animation: slideIn .25s ease; min-width: 220px;
-    }
-    .toast.success { background: var(--success); }
-    .toast.error { background: var(--danger); }
-    @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-
-    /* ORDER SUCCESS */
-    .order-success { text-align: center; padding: 4rem 2rem; }
-    .order-success .success-emoji { font-size: 5rem; margin-bottom: 1rem; }
-    .order-success h2 { font-size: 2rem; font-weight: 800; margin-bottom: .5rem; }
-    .order-success p { color: var(--text-muted); margin-bottom: 2rem; }
-
-    /* USER MENU */
-    .user-avatar {
-      width: 36px; height: 36px; border-radius: 50%;
-      background: var(--brand); color: white;
-      font-size: .85rem; font-weight: 800;
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer; border: none;
-    }
-
-    @media (max-width: 680px) {
-      .shop-layout { grid-template-columns: 1fr; }
-      .filters { display: flex; gap: .5rem; flex-wrap: wrap; }
-      .filter-btn { width: auto; }
-      .product-detail-card { grid-template-columns: 1fr; }
-      .hero h1 { font-size: 2rem; }
-    }
-  </style>
+  <!-- App styles -->
+  <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
 
-<!-- NAV -->
+<!-- NAV: sticky top bar with logo, search, and cart/auth actions -->
 <nav>
   <div class="nav-inner">
     <a class="nav-logo" href="#" onclick="navigate('home')">
@@ -310,16 +30,20 @@
     </div>
     <div class="nav-actions">
       <button class="btn btn-ghost" onclick="navigate('shop')" data-testid="nav-shop">Shop</button>
+      <!-- Cart button: badge count hidden when cart is empty via [data-count="0"] CSS rule -->
       <button class="cart-btn" onclick="navigate('cart')" data-testid="cart-button" aria-label="View cart">
         🛒
         <span class="cart-count" id="cart-count" data-count="0">0</span>
       </button>
+      <!-- Populated by JS: shows login/register buttons or user avatar -->
       <div id="auth-nav"></div>
     </div>
   </div>
 </nav>
 
-<!-- PAGES -->
+<!-- PAGES: only the .active page is visible; JS swaps the class on navigation -->
+
+<!-- Home: hero banner + featured products grid -->
 <div id="page-home" class="page active">
   <div class="hero">
     <h1>Made by llamas,<br>loved by everyone.</h1>
@@ -336,6 +60,7 @@
   </div>
 </div>
 
+<!-- Shop: category filter sidebar + full product grid -->
 <div id="page-shop" class="page">
   <div class="shop-layout">
     <aside class="filters">
@@ -352,10 +77,12 @@
   </div>
 </div>
 
+<!-- Product detail: rendered dynamically by JS into this container -->
 <div id="page-product" class="page">
   <div class="product-detail" id="product-detail-content"></div>
 </div>
 
+<!-- Cart: list of items + order summary -->
 <div id="page-cart" class="page">
   <div class="cart-page">
     <h1>Your Cart 🛒</h1>
@@ -363,6 +90,7 @@
   </div>
 </div>
 
+<!-- Login form -->
 <div id="page-login" class="page">
   <div class="auth-page">
     <div class="auth-card">
@@ -386,6 +114,7 @@
   </div>
 </div>
 
+<!-- Register form -->
 <div id="page-register" class="page">
   <div class="auth-page">
     <div class="auth-card">
@@ -410,6 +139,7 @@
   </div>
 </div>
 
+<!-- Order success: shown after checkout -->
 <div id="page-order-success" class="page">
   <div class="order-success">
     <div class="success-emoji">🎉</div>
@@ -419,7 +149,7 @@
   </div>
 </div>
 
-<!-- TOAST -->
+<!-- Toast notifications rendered here by JS -->
 <div class="toast-container" id="toasts"></div>
 
 <script type="module" src="./src/main.js"></script>

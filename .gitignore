@@ -11,6 +11,7 @@ blob-report/
 tests/04-api-and-network/assets/llamacart.har
 tests/04-api-and-network/assets/*.dat
 tests/04-api-and-network/assets/*.html
+tests/04-api-and-network/assets/*.css
 
 # Auth state (Chapter 5)
 auth.json
