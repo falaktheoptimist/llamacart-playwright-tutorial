@@ -78,7 +78,7 @@ test.describe('CI patterns — writing tests that behave well in pipelines', () 
   test('retry-safe: assert state, not intermediate steps', async ({ page }) => {
     await page.goto('/');
     await page.getByTestId('nav-shop').click();
-    await page.getByTestId('add-to-cart').first().click();
+    await page.getByTestId('product-card').first().getByTestId('add-to-cart').click();
 
     // Assert the final state — not the toast (which disappears)
     await expect(page.locator('#cart-count')).toHaveText('1');
@@ -113,7 +113,7 @@ test.describe('CI patterns — writing tests that behave well in pipelines', () 
   test('regression @regression — full checkout flow', async ({ page }) => {
     await page.goto('/');
     await page.getByTestId('hero-shop-btn').click();
-    await page.getByTestId('add-to-cart').first().click();
+    await page.getByTestId('product-card').first().getByTestId('add-to-cart').click();
     await page.getByTestId('cart-button').click();
     await page.getByTestId('checkout-btn').click();
     await expect(page.getByText('Order placed!')).toBeVisible();
@@ -121,17 +121,17 @@ test.describe('CI patterns — writing tests that behave well in pipelines', () 
 
   // ── Parallelism and test isolation ────────────────────────────────────────
 
-  test('isolation: each test gets a fresh browser context', async ({ page, context }) => {
-    // localStorage is empty at the start of every test
-    const cartData = await page.evaluate(() => localStorage.getItem('llama-cart'));
-    expect(cartData).toBeNull();
+  test('isolation: each test gets a fresh browser context', async ({ page }) => {
+    await page.goto('/');
+    // cart has no items at the start of every test — no state carried over from other tests
+    await expect(page.locator('#cart-count')).toHaveText('0');
   });
 
   test('isolation: actions in one test do not affect another', async ({ page }) => {
     // Add to cart
     await page.goto('/');
     await page.getByTestId('hero-shop-btn').click();
-    await page.getByTestId('add-to-cart').first().click();
+    await page.getByTestId('product-card').first().getByTestId('add-to-cart').click();
     await expect(page.locator('#cart-count')).toHaveText('1');
     // This cart state only lives in this test's context — other tests see 0
   });
