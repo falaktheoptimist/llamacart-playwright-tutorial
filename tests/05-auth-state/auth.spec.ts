@@ -30,47 +30,50 @@ import path from 'path';
 
 const AUTH_FILE = path.join(__dirname, '../../playwright/.auth/user.json');
 
-// ── SETUP: log in once and save the state ─────────────────────────────────
-test('auth setup — save logged-in state', async ({ page }) => {
-  await page.goto('/');
-  await page.getByTestId('nav-login').click();
-  await page.getByLabel('Email').fill('tester@llamacart.dev');
-  await page.getByLabel('Password').fill('LlamaRules123');
-  await page.getByTestId('login-submit').click();
+// serial ensures setup runs before the reuse tests
+test.describe.serial('auth state', () => {
+  // ── SETUP: log in once and save the state ───────────────────────────────
+  test('auth setup — save logged-in state', async ({ page }) => {
+    await page.goto('/');
+    await page.getByTestId('nav-login').click();
+    await page.getByTestId('login-email').fill('tester@llamacart.dev');
+    await page.getByTestId('login-password').fill('LlamaRules123');
+    await page.getByTestId('login-submit').click();
 
-  // Wait until login is confirmed
-  await expect(page.getByTestId('user-avatar')).toBeVisible();
+    // Wait until login is confirmed
+    await expect(page.getByTestId('user-avatar')).toBeVisible();
 
-  // Save the entire browser storage state to a file
-  await page.context().storageState({ path: AUTH_FILE });
-});
+    // Save the entire browser storage state to a file
+    await page.context().storageState({ path: AUTH_FILE });
+  });
 
-// ── REUSE: start new context using saved state ────────────────────────────
-test('reuse saved auth state — already logged in', async () => {
-  const browser = await chromium.launch();
+  // ── REUSE: start new context using saved state ──────────────────────────
+  test('reuse saved auth state — already logged in', async () => {
+    const browser = await chromium.launch();
 
-  // Create a context with the saved storage state
-  const context = await browser.newContext({ storageState: AUTH_FILE });
-  const page = await context.newPage();
+    // Create a context with the saved storage state
+    const context = await browser.newContext({ storageState: AUTH_FILE });
+    const page = await context.newPage();
 
-  await page.goto('/');
+    await page.goto('/');
 
-  // User should already be logged in — no login step needed
-  await expect(page.getByTestId('user-avatar')).toBeVisible();
+    // User should already be logged in — no login step needed
+    await expect(page.getByTestId('user-avatar')).toBeVisible();
 
-  await browser.close();
-});
+    await browser.close();
+  });
 
-test('saved auth state persists across navigation', async () => {
-  const browser = await chromium.launch();
-  const context = await browser.newContext({ storageState: AUTH_FILE });
-  const page = await context.newPage();
+  test('saved auth state persists across navigation', async () => {
+    const browser = await chromium.launch();
+    const context = await browser.newContext({ storageState: AUTH_FILE });
+    const page = await context.newPage();
 
-  await page.goto('/');
-  await page.getByTestId('nav-shop').click();
+    await page.goto('/');
+    await page.getByTestId('nav-shop').click();
 
-  // Navigate around — still logged in
-  await expect(page.getByTestId('user-avatar')).toBeVisible();
+    // Navigate around — still logged in
+    await expect(page.getByTestId('user-avatar')).toBeVisible();
 
-  await browser.close();
+    await browser.close();
+  });
 });
