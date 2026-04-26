@@ -20,8 +20,8 @@ export class LoginPage {
   }
 
   async login(email: string, password: string) {
-    await this.page.getByLabel('Email').fill(email);
-    await this.page.getByLabel('Password').fill(password);
+    await this.page.getByTestId('login-email').fill(email);
+    await this.page.getByTestId('login-password').fill(password);
     await this.page.getByTestId('login-submit').click();
   }
 

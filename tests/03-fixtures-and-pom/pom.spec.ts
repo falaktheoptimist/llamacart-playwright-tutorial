@@ -85,7 +85,7 @@ test.describe('Cart — using fixtures and POM', () => {
   });
 
   test('adding a product updates cart count', async ({ page, cartPage }) => {
-    await page.getByTestId('add-to-cart').first().click();
+    await page.locator('#page-shop').getByTestId('add-to-cart').first().click();
     const countBadge = page.locator('#cart-count');
     await expect(countBadge).toHaveText('1');
   });
@@ -137,7 +137,7 @@ test.describe('Logged-in user flow — using loggedInPage fixture', () => {
 
   test('logged-in user can add to cart and checkout', async ({ loggedInPage, page, cartPage }) => {
     await page.getByTestId('nav-shop').click();
-    await page.getByTestId('add-to-cart').first().click();
+    await page.locator('#page-shop').getByTestId('add-to-cart').first().click();
 
     await cartPage.goto();
     await cartPage.checkout();
