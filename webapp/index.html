@@ -453,10 +453,10 @@
   }
 
   // ── PRODUCT CARD ──────────────────────────────────────────────────────────
-  function productCardHTML(p) {
+  function productCardHTML(p, testid = 'product-card') {
     const oos = !p.inStock;
     return `
-      <div class="product-card ${oos ? 'out-of-stock' : ''}" data-testid="product-card" data-product-id="${p.id}" onclick="navigate('product', ${p.id})">
+      <div class="product-card ${oos ? 'out-of-stock' : ''}" data-testid="${testid}" data-product-id="${p.id}" onclick="navigate('product', ${p.id})">
         <div class="product-emoji">${p.emoji}</div>
         <div class="product-body">
           <div class="product-name" data-testid="product-name">${p.name}</div>
@@ -475,7 +475,7 @@
   // ── FEATURED ──────────────────────────────────────────────────────────────
   function renderFeatured() {
     const featured = products.filter(p => p.inStock).slice(0, 4);
-    document.getElementById('featured-grid').innerHTML = featured.map(productCardHTML).join('');
+    document.getElementById('featured-grid').innerHTML = featured.map(p => productCardHTML(p, 'featured-card')).join('');
   }
 
   // ── SHOP ──────────────────────────────────────────────────────────────────
@@ -501,7 +501,7 @@
       activeCategory === 'all' ? 'All Products' : activeCategory.charAt(0).toUpperCase() + activeCategory.slice(1);
     document.getElementById('product-count').textContent = `${filtered.length} item${filtered.length !== 1 ? 's' : ''}`;
     document.getElementById('products-grid').innerHTML =
-      filtered.length ? filtered.map(productCardHTML).join('') :
+      filtered.length ? filtered.map(p => productCardHTML(p)).join('') :
       '<p style="color:var(--text-muted);padding:2rem 0;">No products found.</p>';
   }
 
