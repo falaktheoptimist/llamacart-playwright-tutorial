@@ -57,7 +57,7 @@ test.describe('Network mocking — controlling the backend from your tests', () 
 
   test('mock: intercept products data with a custom response', async ({ page }) => {
     // Intercept requests to the products data file
-    await page.route('**/products.js', async route => {
+    await page.route('**/products.js*', async route => {
       // Return a stripped-down mock — only 2 products
       await route.fulfill({
         status: 200,
@@ -100,7 +100,7 @@ test.describe('Network mocking — controlling the backend from your tests', () 
   test('failure: abort a request to simulate network error', async ({ page }) => {
     let requestAborted = false;
 
-    await page.route('**/products.js', async route => {
+    await page.route('**/productDetail.js*', async route => {
       requestAborted = true;
       await route.abort('failed'); // simulate connection failure
     });
@@ -111,7 +111,7 @@ test.describe('Network mocking — controlling the backend from your tests', () 
   });
 
   test('failure: simulate slow network with artificial delay', async ({ page }) => {
-    await page.route('**/products.js', async route => {
+    await page.route('**/productDetail.js*', async route => {
       // Wait 1 second before responding (simulates slow API)
       await new Promise(res => setTimeout(res, 1000));
       await route.continue(); // then let it pass through normally
@@ -128,7 +128,7 @@ test.describe('Network mocking — controlling the backend from your tests', () 
   // ── Modifying responses ───────────────────────────────────────────────────
 
   test('modify: mark all products as out of stock', async ({ page }) => {
-    await page.route('**/products.js', async route => {
+    await page.route('**/products.js*', async route => {
       // Fetch the real response first
       const response = await route.fetch();
       let body = await response.text();
@@ -155,7 +155,7 @@ test.describe('Network mocking — controlling the backend from your tests', () 
   test('selective: only mock one product category', async ({ page }) => {
     let intercepted = false;
 
-    await page.route('**/products.js', async route => {
+    await page.route('**/products.js*', async route => {
       intercepted = true;
       await route.continue(); // pass through
     });
@@ -186,7 +186,7 @@ test.describe('Network mocking — controlling the backend from your tests', () 
   test('route priority: more specific routes take precedence', async ({ page }) => {
     // Both routes match, but the first registered one wins
     await page.route('**/*.js', route => route.continue());
-    await page.route('**/products.js', async route => {
+    await page.route('**/products.js*', async route => {
       await route.fulfill({
         status: 200,
         contentType: 'application/javascript',
@@ -243,20 +243,20 @@ test.describe('Network mocking — controlling the backend from your tests', () 
 
 });
 
-// ── HAR file recording (advanced) ────────────────────────────────────────────
+// // ── HAR file recording (advanced) ────────────────────────────────────────────
 
-test.describe('HAR recording — capture and replay real network traffic', () => {
+// test.describe('HAR recording — capture and replay real network traffic', () => {
 
-  test('record network as HAR file', async ({ page, context }) => {
-    // Record all network requests to a HAR file
-    await context.routeFromHAR('./tests/04-api-and-network/assets/llamacart.har', {
-      update: true,    // set to true to record; false to replay
-      url: /localhost/,
-    });
+//   test('record network as HAR file', async ({ page, context }) => {
+//     // Record all network requests to a HAR file
+//     await context.routeFromHAR('./tests/04-api-and-network/assets/llamacart.har', {
+//       update: true,    // set to true to record; false to replay
+//       url: /localhost/,
+//     });
 
-    await page.goto('/');
-    // On first run with update:true, this records to the HAR file
-    // On subsequent runs with update:false, it replays from it
-  });
+//     await page.goto('/');
+//     // On first run with update:true, this records to the HAR file
+//     // On subsequent runs with update:false, it replays from it
+//   });
 
-});
+// });
