@@ -2,6 +2,44 @@
 
 > Find elements the right way: resilient, readable, accessibility-first.
 
+## Chapter overview
+
+Chapter 1 used `getByRole` and `getByTestId` without dwelling on why. This chapter is about the **full locator API** and — more importantly — the strategy behind choosing one locator over another. That choice is the single biggest factor in whether your tests stay green through refactors or break on every copy edit.
+
+### Why locator choice matters
+
+Every locator strategy makes a different trade-off between stability and specificity:
+
+| Locator | Breaks when… | Use for |
+|---|---|---|
+| CSS selector (`.btn-primary`) | Class names are renamed or the CSS framework is swapped | Avoid — ties tests to implementation details |
+| `getByText()` | Copy is edited | Static badges, status labels, prose content |
+| `getByPlaceholder()` | Placeholder text changes | Inputs without a visible label |
+| `getByLabel()` | Label text changes | Form inputs — mirrors the accessibility tree |
+| `getByRole()` | ARIA role or accessible name changes | Everything with semantic HTML — the most resilient strategy |
+| `getByTestId()` | `data-testid` attribute is removed | Dynamic list items, containers with no good ARIA role |
+
+The priority order is: **`getByRole` → `getByLabel` → `getByPlaceholder` → `getByText` → `getByTestId`**. CSS selectors are rarely the right answer in modern Playwright tests.
+
+### What's new in this chapter
+
+Two structural tools appear here for the first time and are used throughout the rest of the tutorial:
+
+- **`test.describe` + `test.beforeEach`** — group related tests and share navigation setup so each test starts in a known state without repeating boilerplate
+- **`expect.soft()`** — non-fatal assertions that collect multiple failures in a single run, useful for audit-style checks
+
+### Where locator strategy matters most in real projects
+
+| Situation | Why the locator choice matters |
+|---|---|
+| Page renders two forms simultaneously (login + register) | Ambiguous locators cause strict mode violations — scoping to a container is required |
+| Internationalized apps | `getByRole` survives translation if ARIA is wired correctly; text-based selectors do not |
+| Design system migrations | CSS class names change wholesale; role-based locators are immune |
+| Repeated components in a list (cards, table rows) | Filter + chain targets the right instance without fragile index-based selectors |
+| Accessibility audits | `getByRole` tests double as a basic check that your ARIA structure is correct |
+
+---
+
 ## What you'll learn
 
 - Finding elements by ARIA role with [`getByRole()`](https://playwright.dev/docs/api/class-page#page-get-by-role)
@@ -71,6 +109,8 @@ test('getByRole — find the nav logo link', async ({ page }) => {
 
 This test calls `page.goto('/')` explicitly to start from the homepage, overriding the `beforeEach` shop navigation — the logo link is visible on all pages, but the intent here is to test it in its primary context.
 
+> **In practice:** `getByRole('link')` is the right tool for testing navigation — top nav links, breadcrumbs, footer links, and anchor CTAs. Because it mirrors what screen readers expose, a passing test also gives you basic confidence that the link is accessible, not just visible.
+
 ---
 
 ### Test 2 — "getByRole — find buttons by name"
@@ -84,6 +124,8 @@ test('getByRole — find buttons by name', async ({ page }) => {
 ```
 
 When `getByRole` matches **multiple elements** it returns all of them as a locator collection, just like `getByTestId`. The `{ name: 'Add to Cart' }` option filters by accessible name — the visible button label — which means a copy change from "Add to Cart" to "Buy Now" will catch the test's attention immediately.
+
+> **In practice:** Counting buttons by accessible name verifies feature availability across a list — all "Add to Cart" buttons present for in-stock items, all "Download" buttons present on a file list, all "Remove" buttons present in a populated cart. It also acts as a copy-change canary: rename the button label and the test breaks immediately, prompting you to review the change intentionally.
 
 #### Assignment — count the buttons on the shop page
 
@@ -126,6 +168,8 @@ test('getByRole — find headings', async ({ page }) => {
 
 `getByRole('heading')` matches any `<h1>`–`<h6>` element. Scoping by `{ name: 'All Products' }` pins it to the shop section heading. This is preferable to `page.locator('h2')` because it expresses *intent* — "I expect a heading that says All Products" — rather than a CSS tag that might change.
 
+> **In practice:** Heading assertions are useful in multi-step flows where each step has a distinct heading — checkout steps, onboarding wizards, settings sections, tabbed panels. Asserting the correct heading is visible confirms the user is on the right step without depending on URL changes, which don't exist in SPAs.
+
 ---
 
 ### Test 4 — "getByLabel — fill in login form fields"
@@ -148,6 +192,8 @@ test('getByLabel — fill in login form fields', async ({ page }) => {
 The login page has both a Login form and a Register form in the DOM at the same time — each has an "Email" input. Calling `page.getByLabel('Email')` on the full page would match both and throw a **strict mode violation** (Playwright refuses to act on an ambiguous locator). Scoping to `page.locator('#page-login')` first ensures `getByLabel` only searches inside the login section.
 
 [`toHaveValue()`](https://playwright.dev/docs/api/class-locatorassertions#locator-assertions-to-have-value) asserts the current value of an `<input>` element — different from `toHaveText()`, which reads text content. Always use `toHaveValue` to verify what a user typed.
+
+> **In practice:** `getByLabel` is the correct locator for almost every form test — login, registration, checkout, profile settings, search filters. Scoping to a container (`page.locator('#page-login')`) is the standard fix when a page renders two forms at once, such as billing + shipping address forms or a login + register panel on the same screen.
 
 #### Assignment — trigger a strict mode violation
 
@@ -192,6 +238,8 @@ test('getByPlaceholder — find the search input', async ({ page }) => {
 
 [`getByPlaceholder()`](https://playwright.dev/docs/api/class-page#page-get-by-placeholder) matches the `placeholder` attribute on an `<input>`. It is useful when inputs have no `<label>` — though adding a label and switching to `getByLabel` is always better for accessibility. Use it as a fallback when the HTML is outside your control.
 
+> **In practice:** `getByPlaceholder` is a useful fallback for inline search bars, quick-filter boxes, and comment fields from third-party component libraries where you can't add a label. If you control the HTML, adding a `<label>` and switching to `getByLabel` improves both the test and the accessibility of the page at the same time.
+
 ---
 
 ### Test 6 — "getByText — find elements by visible text"
@@ -204,6 +252,8 @@ test('getByText — find elements by visible text', async ({ page }) => {
 ```
 
 [`getByText()`](https://playwright.dev/docs/api/class-page#page-get-by-text) searches the visible text content of every element. Without `exact: true` it does a **substring match** — so `getByText('Out of stock')` would also match any element whose text *contains* "Out of stock" as part of a longer string (like a description or button label). Passing `{ exact: true }` restricts the match to elements whose full text is exactly "Out of stock".
+
+> **In practice:** `getByText` with `{ exact: true }` is the right approach for status badges, tags, and labels where the exact wording matters — "Pending", "Draft", "Out of stock". In list views where many similar strings appear, skipping `{ exact: true }` will often trigger a strict mode violation, which is Playwright's way of telling you the locator is too broad.
 
 #### Assignment — see what happens without `exact: true`
 
@@ -235,6 +285,8 @@ test('getByTestId — use data-testid attributes', async ({ page }) => {
 
 The trade-off: test IDs couple your test suite to the markup, so removing a `data-testid` silently breaks tests. They are most valuable on dynamic containers (product cards, list items) that don't have a stable role + name.
 
+> **In practice:** Test IDs are also the right tool for scoping containers — `page.locator('[data-testid="cart-panel"]').getByRole('button', { name: 'Remove' })` targets the Remove button specifically inside the cart drawer, not anywhere else on the page. This pattern scales well in component-heavy UIs where the same accessible name appears in multiple places.
+
 ---
 
 ### Test 8 — "chaining — find a specific button inside a specific card"
@@ -251,6 +303,8 @@ test('chaining — find a specific button inside a specific card', async ({ page
 [`.filter({ hasText: '...' })`](https://playwright.dev/docs/api/class-locator#locator-filter) narrows a locator that matches many elements down to only those that contain a given text string. Here it takes all 8 product cards and keeps only the one with "Alpaca Friendship Bracelet" in its text content.
 
 Calling `.getByTestId('add-to-cart')` on the filtered card then **scopes the search** to inside that card — so the click targets the correct button even though every card has an `add-to-cart` element. This is the standard pattern for interacting with items in a list when you know which item you want by name.
+
+> **In practice:** Filter + chain is the standard approach for any list-based interaction — click the "Edit" button on the row for a specific user, click "Remove" on a particular cart item, expand the accordion for a named FAQ entry. It lets you target by content rather than by fragile position, so the test survives reordering.
 
 #### Assignment — chain a `getByRole` instead of `getByTestId`
 
@@ -288,6 +342,8 @@ test('nth() — interact with the third product card', async ({ page }) => {
 
 The pattern here — capture a value, perform an action, assert the value carried over — is the same as Test 8 from Chapter 1. It is useful any time navigation should preserve context: clicking a card should open *that* card's detail page, not a random one.
 
+> **In practice:** `.nth()` is appropriate when position is meaningful — the featured slot at the top of a recommendations list, the first result after sorting, the pinned item in a feed. Avoid it when order isn't guaranteed; use `.filter({ hasText })` instead so the test is resilient to reordering.
+
 ---
 
 ### Test 10 — "locator assertions — visible, enabled, count"
@@ -312,6 +368,8 @@ This test demonstrates three assertions you'll use constantly:
 
 All Playwright assertions **auto-retry** until the condition is met or the timeout expires. There is no need for `waitForSelector` or manual sleeps.
 
+> **In practice:** Running several assertions together in one test is useful for page-load verification — confirming a dashboard renders its key elements (search bar visible, filter enabled, table populated, item count correct) before any interaction tests run. Think of it as a structural health check that catches gross rendering failures early.
+
 ---
 
 ### Test 11 — "soft assertions — continue test even after a failure"
@@ -328,6 +386,8 @@ test('soft assertions — continue test even after a failure', async ({ page }) 
 [`expect.soft()`](https://playwright.dev/docs/api/class-playwrightassertions#playwright-assertions-expect-soft) marks an assertion as non-fatal: if it fails, the test continues executing instead of stopping. All soft failures are collected and reported together at the end.
 
 Use soft assertions when you want to capture the full state of a page in a single test run — for example, checking that every element on a dashboard renders correctly, where stopping at the first broken element would hide all the others. For most tests, hard assertions (plain `expect()`) are the right default: stopping early gives a cleaner failure signal and avoids cascading errors.
+
+> **In practice:** Soft assertions are useful for audit-style tests — verifying every field on a settings page renders, confirming a list of legal disclaimers all appear, or checking accessibility attributes across a long form. You want the full report in a single run, not one failure per re-run.
 
 #### Assignment — make one soft assertion fail
 
