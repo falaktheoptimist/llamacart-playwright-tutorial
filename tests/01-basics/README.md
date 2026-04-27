@@ -2,6 +2,34 @@
 
 > From zero to running tests in minutes.
 
+## Chapter overview
+
+The root README introduced Playwright's components — browser contexts, locators, fixtures, and so on. This chapter makes them concrete. You'll write eight tests against LlamaCart's home page, shop, and product detail page using the three moves that every E2E test is built from:
+
+```
+1. Navigate   →  page.goto('/shop')
+2. Act        →  click a button, type a search term, fill a form
+3. Assert     →  confirm the DOM reflects what should have changed
+```
+
+Chapters 2–7 add sophistication (page objects, network stubs, visual diffs), but this pattern is the foundation everything else builds on.
+
+### Where you'd apply these basics in a real project
+
+The primitives here cover a wide slice of typical E2E testing work:
+
+| Technique | Real-world use case |
+|---|---|
+| `page.goto()` + `toHaveTitle()` | Post-deploy smoke test — confirm the right page loaded, hasn't 404'd, and carries the right SEO title |
+| `getByRole('heading')` + `toBeVisible()` | Verify hero banners, modal titles, and error headings actually render — catches CSS `display: none` bugs that unit tests miss entirely |
+| `getByTestId()` + `click()` | CTAs, add-to-cart buttons, nav links, tab panels — anything a user taps to trigger a state change |
+| `toHaveCount()` | Product grids, search result lists, cart line items, notification badges — any place where the number of rendered elements is meaningful |
+| `fill()` + `toHaveCount()` | Search and filter flows — type a term, assert only matching results remain |
+| `toContainText('$')` | Price labels, status badges, dynamic text where the exact value varies but the format must not |
+| `textContent()` + assert across navigation | Cart total persisting after page change, product name on a card matching the detail-page `<h1>`, username shown in a header after login |
+
+---
+
 ## What you'll learn
 
 - Navigating to a page with [`page.goto()`](https://playwright.dev/docs/api/class-page#page-goto)
@@ -61,6 +89,8 @@ test('homepage loads with correct title', async ({ page }) => {
 
 [`expect(page).toHaveTitle()`](https://playwright.dev/docs/api/class-pageassertions#page-assertions-to-have-title) asserts the `<title>` element. Passing a **regex** (`/LlamaCart/`) means the title only needs to *contain* "LlamaCart" — useful when titles include extra text like "LlamaCart 🦙".
 
+> **In practice:** Title checks are a common post-deploy smoke test — run them against staging and production after every release to catch a misconfigured environment variable that breaks rendering, an accidental redirect, or a CDN serving a stale page.
+
 ---
 
 ### Test 2 — "homepage shows the hero heading"
@@ -75,6 +105,8 @@ test('homepage shows the hero heading', async ({ page }) => {
 [`getByRole('heading', { name: ... })`](https://playwright.dev/docs/api/class-page#page-get-by-role) is the **accessibility-first** way to find headings — it maps directly to [ARIA roles](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles) and matches what screen readers see. Note: The `i` flag on the regex makes the match case-insensitive, so the test stays green even if the copy changes capitalisation.
 
 [`toBeVisible()`](https://playwright.dev/docs/api/class-locatorassertions#locator-assertions-to-be-visible) checks the element is in the DOM, not hidden via `display: none` / `visibility: hidden`, and has non-zero dimensions.
+
+> **In practice:** Visibility assertions are the right tool for any conditionally-rendered UI — error messages that appear only after a failed API call, modals that open on click, cookie banners, or feature-flagged content. Unit tests can't catch a CSS bug that hides the element; Playwright can.
 
 #### Assignment — make Test 2 fail
 
@@ -141,6 +173,8 @@ test('clicking "Shop the Collection" navigates to the shop', async ({ page }) =>
 
 After [`click()`](https://playwright.dev/docs/api/class-locator#locator-click), the SPA swaps pages via JavaScript. Playwright transparently handles this: `toBeVisible()` will retry until the product card appears or the test times out.
 
+> **In practice:** Every critical funnel step deserves this pattern — "Start free trial", "Add to cart", "Proceed to checkout". If a CTA silently stops navigating users forward, conversion drops and you won't know why until you check the analytics. A test that clicks and asserts the next step renders catches it immediately.
+
 ---
 
 ### Test 4 — "product cards are visible in the shop"
@@ -157,6 +191,8 @@ test('product cards are visible in the shop', async ({ page }) => {
 `getByTestId('product-card')` returns a **[locator](https://playwright.dev/docs/locators)** that matches *all* elements with `data-testid="product-card"` — not just the first one.
 
 [`toHaveCount(8)`](https://playwright.dev/docs/api/class-locatorassertions#locator-assertions-to-have-count) asserts that exactly 8 elements match. If a product is accidentally removed from the data source, or a render bug hides some cards, this assertion catches it. Playwright retries the count check automatically until it passes or the timeout expires.
+
+> **In practice:** Count assertions are useful any time the number of rendered items carries business meaning — a paginated list showing the right page size, a cart containing exactly the items added, a dashboard rendering all assigned tickets, or an admin table reflecting the correct number of records from the database.
 
 #### Assignment — catch a wrong count
 
@@ -202,6 +238,8 @@ test('each product card shows a name and price', async ({ page }) => {
 
 [`toContainText('$')`](https://playwright.dev/docs/api/class-locatorassertions#locator-assertions-to-contain-text) does a **partial match** — the price element just needs to contain a `$` somewhere in its text. This is more resilient than [`toHaveText('$12.00')`](https://playwright.dev/docs/api/class-locatorassertions#locator-assertions-to-have-text), which would break the moment a price changes. Use `toContainText` when you care about the shape of the value (currency symbol present), not the exact value.
 
+> **In practice:** Scoped locators are essential in list-heavy UIs — data tables, kanban boards, notification feeds — where you need to assert on a *specific row* without accidentally matching siblings. `toContainText` is the right default for prices, timestamps, status badges, and any runtime-generated value where the format matters more than the exact content.
+
 #### Assignment — spot the difference between `toContainText` and `toHaveText`
 
 Swap `toContainText('$')` for `toHaveText('$')` and run the test:
@@ -246,6 +284,8 @@ test('search filters products', async ({ page }) => {
 
 This test chains two assertions: first it checks that only 1 card is shown (the filter is working), then it checks that the surviving card is actually the scarf (not a coincidental count match with the wrong product).
 
+> **In practice:** The fill → assert-count pattern applies directly to any input-driven UI — autocomplete dropdowns, date range pickers, status filter panels, tag selectors. On search-heavy products (SaaS dashboards, content platforms, admin tools) it's one of the highest-value tests to have, because broken search is immediately visible to users.
+
 #### Assignment — search for a term with multiple matches
 
 Replace `'scarf'` with `'llama'` and update `toHaveCount` to match however many products contain "llama" in their name. Run the test to confirm your count is right.
@@ -288,6 +328,8 @@ This test covers the **empty state** — a part of the UI that's easy to forget 
 
 Notice this test navigates to the shop via the nav link (`nav-shop`) rather than the hero button. Either path works; using the nav link here shows that the search bar is also accessible from within the shop page, not only after clicking the hero CTA.
 
+> **In practice:** Empty states are frequently untested and often broken — a render condition that short-circuits too early, a missing CSS class, or a copy change that makes the selector stale. Any feature with a "nothing here yet" state (empty cart, zero notifications, a fresh user account, a cleared inbox) needs an explicit test.
+
 #### Assignment — assert the product grid is empty instead
 
 The app hides the "No products found." message when results exist and shows it when none do. As an alternative assertion, try confirming that `product-card` has a count of 0 instead of checking for the message text:
@@ -328,6 +370,8 @@ test('clicking a product card opens the detail page', async ({ page }) => {
 The `!` after `firstName` is a TypeScript non-null assertion — `textContent()` can return `null` if the element has no text, but we know it does, so we tell TypeScript to trust us. In production test code you'd handle the null case explicitly.
 
 [`toHaveText(firstName!)`](https://playwright.dev/docs/api/class-locatorassertions#locator-assertions-to-have-text) does an **exact match** on the detail page's `<h1>` — the name on the card and the name on the detail page must be identical. This catches bugs where navigation works but loads the wrong product.
+
+> **In practice:** Capturing a value before an action and asserting it after is the standard pattern for data continuity: the item you click should be the one that loads, the product added to the cart should appear on the order summary, the username saved in profile settings should show up in the nav header. It's the simplest way to verify that state is passed correctly across a transition.
 
 #### Assignment — capture and log the product name
 
