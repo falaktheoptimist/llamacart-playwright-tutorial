@@ -57,7 +57,7 @@ test('homepage loads with correct title', async ({ page }) => {
 });
 ```
 
-[`page.goto('/')`](https://playwright.dev/docs/api/class-page#page-goto) navigates the browser to the base URL defined in `playwright.config.ts` (`http://localhost:5173`). Playwright waits for the page to load before moving on.
+[`page.goto('/')`](https://playwright.dev/docs/api/class-page#page-goto) navigates the browser to the base URL defined in `playwright.config.ts` (`http://localhost:5173`). Playwright waits for the page to load before moving on. `/i` denotes case insensitive matching of the provided name.
 
 [`expect(page).toHaveTitle()`](https://playwright.dev/docs/api/class-pageassertions#page-assertions-to-have-title) asserts the `<title>` element. Passing a **regex** (`/LlamaCart/`) means the title only needs to *contain* "LlamaCart" — useful when titles include extra text like "LlamaCart 🦙".
 

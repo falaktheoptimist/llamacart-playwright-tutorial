@@ -1,10 +1,56 @@
 # 🦙 LlamaCart — Playwright E2E Tutorial
 
-> A hands-on Playwright tutorial built around **LlamaCart**, a fictional handmade goods store run by llamas. Learn end-to-end testing from zero to CI/CD.
+> A hands-on [Playwright](https://playwright.dev) tutorial built around **LlamaCart**, a fictional handmade goods store run by llamas. Learn end-to-end testing from zero to CI/CD.
 
 ---
 
-![LlamaCart demo — adding items to cart and checking out](tests/01-basics/assets/demo.gif)
+<video src="tests/01-basics/assets/demo.mp4" autoplay loop muted playsinline width="100%"></video>
+
+---
+
+## What is Playwright?
+
+[Playwright](https://playwright.dev) is an open-source end-to-end testing framework by Microsoft. It drives real browsers — Chrome, Firefox, and Safari — through a single, unified API, letting you write tests once and verify them across every major engine.
+
+### Core components
+
+| Component | What it does | Docs |
+|---|---|---|
+| [**Test runner**](https://playwright.dev/docs/running-tests) | Discovers, runs, and reports tests. Supports parallelism, retries, tagging, and sharding out of the box. | `npx playwright test` |
+| [**Browser contexts**](https://playwright.dev/docs/browser-contexts) | Lightweight, isolated browser sessions — like incognito windows. Each test gets its own context so state never leaks between tests. | `browser.newContext()` |
+| [**Page**](https://playwright.dev/docs/pages) | The object you interact with in every test: navigate, click, fill, assert. One page per browser tab. | `context.newPage()` |
+| [**Locators**](https://playwright.dev/docs/locators) | Smart element queries that auto-wait and auto-retry. Preferred over raw CSS/XPath selectors. | `page.getByRole()`, `getByTestId()` |
+| [**Network layer**](https://playwright.dev/docs/network) | Intercept, stub, abort, or modify any HTTP request your app makes — no proxy needed. | `page.route()` |
+| [**Fixtures**](https://playwright.dev/docs/test-fixtures) | Dependency injection for tests: share pages, auth state, or any custom setup/teardown across a suite. | `test.extend()` |
+| [**Codegen**](https://playwright.dev/docs/codegen) | Record browser interactions and emit test code automatically. | `npx playwright codegen` |
+| [**Trace viewer**](https://playwright.dev/docs/trace-viewer) | A full timeline of any test run: DOM snapshots, network calls, console logs, and screenshots. | `npx playwright show-trace` |
+| [**UI mode**](https://playwright.dev/docs/test-ui-mode) | Interactive watch mode with a built-in test explorer, time-travel debugging, and live re-runs. | `npx playwright test --ui` |
+| [**Visual comparisons**](https://playwright.dev/docs/test-snapshots) | Pixel-level screenshot diffing with configurable thresholds and masking. | `expect(page).toHaveScreenshot()` |
+
+### Cross-browser support
+
+Playwright ships its own builds of every browser engine — you never depend on whatever the OS has installed.
+
+| Browser | Engine | Install |
+|---|---|---|
+| [Chrome / Edge](https://playwright.dev/docs/browsers#chromium) | Chromium | `npx playwright install chromium` |
+| [Firefox](https://playwright.dev/docs/browsers#firefox) | Gecko | `npx playwright install firefox` |
+| [Safari](https://playwright.dev/docs/browsers#webkit) | WebKit | `npx playwright install webkit` |
+
+Each engine can also be run in **mobile emulation** mode (Pixel 7, iPhone 14, etc.) using [device descriptors](https://playwright.dev/docs/emulation#devices), giving you viewport, user-agent, and touch events for free.
+
+### Language support
+
+The same test concepts are available in multiple languages — pick the one that fits your stack:
+
+| Language | Package |
+|---|---|
+| TypeScript / JavaScript | [`@playwright/test`](https://www.npmjs.com/package/@playwright/test) |
+| Python | [`playwright`](https://pypi.org/project/playwright/) (pytest plugin: `pytest-playwright`) |
+| Java | [`playwright`](https://mvnrepository.com/artifact/com.microsoft.playwright/playwright) |
+| C# | [`Microsoft.Playwright`](https://www.nuget.org/packages/Microsoft.Playwright) |
+
+Official docs: [playwright.dev/docs/intro](https://playwright.dev/docs/intro)
 
 ---
 
@@ -109,6 +155,15 @@ llamacart-playwright-tutorial/
     └── playwright.yml
 ```
 
+
+---
+
+## Upcoming
+
+| Feature | Status |
+|---|---|
+| Full end-to-end scenario — a single test file that drives every feature of LlamaCart from landing page to order confirmation | Planned |
+| Python version of the full tutorial (pytest-playwright) | Planned |
 
 ---
 
