@@ -4,7 +4,7 @@
 
 ---
 
-<video src="tests/01-basics/assets/demo.mp4" autoplay loop muted playsinline width="100%"></video>
+[![Watch the LlamaCart demo](tests/01-basics/assets/demo-thumbnail.jpg)](tests/01-basics/assets/demo.mp4)
 
 ---
 
